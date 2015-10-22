@@ -20,7 +20,7 @@
     </bean>
 
     <jdbc:initialize-database data-source="dataSource" ignore-failures="DROPS">
-        <jdbc:script location="classpath:sql/init.sql"/>
+        <jdbc:script location="classpath:sql/init.sql" encoding="UTF-8"/>
     </jdbc:initialize-database>
 
     <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
