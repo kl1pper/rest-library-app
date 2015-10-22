@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ru.dmitry.library.mappers.BookMapper">
+
+    <resultMap type="Book" id="BookResult">
+        <id property="id" column="id"/>
+        <result property="author" column="author"/>
+        <result property="title" column="title"/>
+        <result property="description" column="description"/>
+        <result property="publishedYear" column="published_year"/>
+    </resultMap>
+
+    <select id="find" parameterType="int" resultMap="BookResult">
+        select * from books where id=#{id}
+    </select>
+
+    <select id="findTitleById" parameterType="int" resultType="String">
+        select title from books where id=#{id}
+    </select>
+
+    <select id="findBySearchParams" parameterType="map" resultMap="BookResult">
+        select id, author, title, published_year from books
+        <where>
+            <if test="book.title != null">
+                title like #{book.title}
+            </if>
+            <if test="book.author != null">
+                AND author like #{book.author}
+            </if>
+            <if test="book.publishedYear != null">
+                AND published_year = #{book.publishedYear}
+            </if>
+            <if test="book.description != null">
+                AND description like #{book.description}
+            </if>
+        </where>
+        ORDER by title
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countBySearchParams" parameterType="Book" resultType="int">
+        select count(*) from books
+        <where>
+            <if test="title != null">
+                title like #{title}
+            </if>
+            <if test="author != null">
+                AND author like #{author}
+            </if>
+            <if test="publishedYear != null">
+                AND published_year = #{publishedYear}
+            </if>
+            <if test="description != null">
+                AND description like #{description}
+            </if>
+        </where>
+    </select>
+
+    <insert id="insert" parameterType="Book" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO books(author, title, description, published_year) VALUES(#{author},#{title},#{description}, #{publishedYear})
+    </insert>
+
+    <update id="update" parameterType="Book">
+        UPDATE books SET author=#{author}, title=#{title}, description=#{description}, published_year=#{publishedYear} WHERE id=#{id}
+    </update>
+
+    <delete id="delete" parameterType="int">
+        DELETE FROM books where id=#{id}
+    </delete>
+
+</mapper>
