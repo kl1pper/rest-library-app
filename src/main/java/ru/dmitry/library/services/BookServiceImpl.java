@@ -69,7 +69,7 @@ public class BookServiceImpl implements BookService {
         s = Strings.emptyToNull(s);
 
         if (s != null) {
-            s = '%' + s.trim().replace(' ', '%') + '%';
+            s = '%' + s.trim().toLowerCase().replace(' ', '%') + '%';
         }
 
         return s;

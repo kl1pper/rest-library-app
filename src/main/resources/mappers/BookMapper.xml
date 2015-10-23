@@ -25,16 +25,16 @@
         select id, author, title, published_year from books
         <where>
             <if test="book.title != null">
-                title like #{book.title}
+                lower(title) like #{book.title}
             </if>
             <if test="book.author != null">
-                AND author like #{book.author}
+                AND lower(author) like #{book.author}
             </if>
             <if test="book.publishedYear != null">
                 AND published_year = #{book.publishedYear}
             </if>
             <if test="book.description != null">
-                AND description like #{book.description}
+                AND lower(description) like #{book.description}
             </if>
         </where>
         ORDER by title
@@ -45,16 +45,16 @@
         select count(*) from books
         <where>
             <if test="title != null">
-                title like #{title}
+                lower(title) like #{title}
             </if>
             <if test="author != null">
-                AND author like #{author}
+                AND lower(author) like #{author}
             </if>
             <if test="publishedYear != null">
                 AND published_year = #{publishedYear}
             </if>
             <if test="description != null">
-                AND description like #{description}
+                AND lower(description) like #{description}
             </if>
         </where>
     </select>
