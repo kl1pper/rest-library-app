@@ -50,7 +50,7 @@ var Book = (function () {
         },
         message: {
             html: function () {
-                return 'Вы действительно хотите удалить книгу "'+ this.title + '"?';
+                return 'Вы действительно хотите удалить книгу "' + this.title + '"?';
             }
         }
     };
@@ -72,16 +72,19 @@ var Book = (function () {
         });
     }
 
-    function refreshTable() {
+    function refreshTable(withPaginatorRefresh) {
         $.ajax({
             type: "GET",
             url: contextPath + "/book?page=" + bootpagOptions.page + "&search=" + JSON.stringify(validateBook(currentSearch)),
             contentType: "charset=utf-8",
-            async: false,
             success: function (resp) {
                 editDialog.modal('hide');
                 bootpagOptions.total = resp.pageCount;
                 booksTable.render({books: resp.books}, tableDirectives);
+                if (withPaginatorRefresh) {
+                    refreshPaginator();
+                }
+
             },
             error: function (jqXHR, textStatus, e) {
                 showException(textStatus);
@@ -90,74 +93,50 @@ var Book = (function () {
     }
 
     function refreshPaginator() {
-        paginator.bootpag(bootpagOptions).on("page", function(event, num){
+        paginator.bootpag(bootpagOptions).on("page", function (event, num) {
             bootpagOptions.page = num;
             refreshTable();
         });
     }
 
-    function getById(id) {
+    function getById(id, callback) {
         var book = null;
         $.ajax({
             type: "GET",
             url: contextPath + "/book/" + id,
             contentType: "charset=utf-8",
-            async: false,
-            success: function (resp) {
-                book = resp;
-            },
+            success: callback,
             error: function (jqXHR, textStatus, e) {
                 showException(textStatus);
-
             }
         });
         return book;
     }
 
-    function getTitleById(id) {
-        var title = null;
-        $.ajax({
-            type: "GET",
-            url: contextPath + "/book/title/" + id,
-            contentType: "charset=utf-8",
-            async: false,
-            success: function (resp) {
-                title = resp;
-            },
-            error: function (jqXHR, textStatus, e) {
-                showException(textStatus);
-
+    function view(id) {
+        getById(id, function (resp) {
+            if (resp != null) {
+                viewDialog.render({book: resp});
+                viewDialog.modal('show');
             }
         });
-        return title;
-
-    }
-
-    function view(id) {
-        var book = getById(id);
-        if (book != null) {
-            viewDialog.render({book: book});
-            viewDialog.modal('show');
-        }
     }
 
     function clearSearch() {
         bootpagOptions.page = 1;
-        currentSearch  = {
+        currentSearch = {
             author: null,
             title: null,
             publishedYear: null,
             description: null
         };
-        refreshTable();
-        refreshPaginator();
+        refreshTable(true);
     }
 
     function search() {
         bootpagOptions.page = 1;
         currentSearch = fillBook();
-        refreshTable();
-        refreshPaginator();
+        refreshTable(true);
 
     }
 
@@ -169,11 +148,10 @@ var Book = (function () {
                 type: "PUT",
                 url: contextPath + "/book",
                 contentType: "application/json; charset=utf-8",
-                async: false,
                 data: JSON.stringify(book),
                 success: function () {
                     editDialog.modal('hide');
-                    refreshTable();
+                    refreshTable(true);
                 },
                 error: function (jqXHR, textStatus, e) {
                     showException(textStatus);
@@ -192,7 +170,6 @@ var Book = (function () {
                 type: "POST",
                 url: contextPath + "/book",
                 contentType: "application/json; charset=utf-8",
-                async: false,
                 data: JSON.stringify(book),
                 success: function () {
                     editDialog.modal('hide');
@@ -209,10 +186,9 @@ var Book = (function () {
         $.ajax({
             type: "DELETE",
             url: contextPath + "/book/" + id,
-            async: false,
             success: function () {
                 deleteDialog.modal('hide');
-                refreshTable();
+                refreshTable(true);
             },
             error: function (jqXHR, textStatus, e) {
                 showException(textStatus);
@@ -246,22 +222,32 @@ var Book = (function () {
     }
 
     function prepareEdit(id) {
-        var book = getById(id);
-        if (book != null) {
-            var model = {
-                modalTitle: 'Редактирование книги',
-                buttonTitle: 'Сохранить',
-                buttonAction: 'Book.edit(' + id + ');',
-                book: book
-            };
-            openEditDialog(model);
-        }
+        getById(id, function (resp) {
+            if (resp != null) {
+                var model = {
+                    modalTitle: 'Редактирование книги',
+                    buttonTitle: 'Сохранить',
+                    buttonAction: 'Book.edit(' + id + ');',
+                    book: resp
+                };
+                openEditDialog(model);
+            }
+        });
     }
 
     function prepareRemove(id) {
-        deleteDialog.render(
-            {id: id, title: getTitleById(id)}, deleteDialogDirectives);
-        deleteDialog.modal('show');
+        $.ajax({
+            type: "GET",
+            url: contextPath + "/book/title/" + id,
+            contentType: "charset=utf-8",
+            success: function (resp) {
+                deleteDialog.render({id: id, title: resp}, deleteDialogDirectives);
+                deleteDialog.modal('show');
+            },
+            error: function (jqXHR, textStatus, e) {
+                showException(textStatus);
+            }
+        });
     }
 
     function openEditDialog(model) {
