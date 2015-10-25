@@ -1,2 +1,7 @@
 # rest-library-app
-Test task
+
+##  Used technologies:
+* MyBatis
+* H2 database
+* spring-security
+* spring-mvc
